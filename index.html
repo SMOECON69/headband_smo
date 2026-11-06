@@ -24,7 +24,7 @@
             }
         }
     </script>
-    <!-- Google Fonts: Kanit & Prompt -->
+    <!-- Google Fonts: Kanit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -69,7 +69,7 @@
 
     <!-- Main Container Card -->
     <div class="w-full max-w-xl">
-        <!-- Search Card UI (Matched to Image) -->
+        <!-- Search Card UI -->
         <div class="main-card p-6 sm:p-10 mb-6">
             <!-- Header Title -->
             <div class="text-center mb-6">
@@ -110,13 +110,13 @@
 
         <!-- Search Results Container -->
         <div id="resultContainer" class="hidden space-y-4">
-            <!-- Dynamic Result Card will be inserted here -->
+            <!-- Dynamic Result Card -->
         </div>
 
         <!-- System Stats / Overview toggle -->
         <div class="text-center mt-6">
             <button onclick="toggleOverviewModal()" class="text-xs text-gray-400 hover:text-gray-600 underline">
-                ดูยอดสรุปจำนวนผืนทั้งหมดในระบบ
+                ดูยอดสรุปจำนวนผืนและจำนวนรายการทั้งหมดในระบบ
             </button>
         </div>
     </div>
@@ -145,13 +145,13 @@
             </div>
 
             <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex justify-between items-center text-sm">
-                <span class="text-blue-800 font-medium">จำนวนผู้มีสิทธิ์รับผ้าคาด (รวมตามคน):</span>
-                <span id="statStudentTotal" class="font-bold text-blue-900 text-lg">0 คน</span>
+                <span class="text-blue-800 font-medium">จำนวนรายการทั้งหมดในระบบ:</span>
+                <span id="statStudentTotal" class="font-bold text-blue-900 text-lg">0 รายการ</span>
             </div>
 
             <div class="mt-3 flex justify-between text-xs text-gray-500">
-                <span>รับของไปแล้ว: <strong id="statReceivedCount" class="text-emerald-600">0</strong> คน</span>
-                <span>ยังไม่ได้รับ: <strong id="statPendingCount" class="text-amber-600">0</strong> คน</span>
+                <span>รับของไปแล้ว: <strong id="statReceivedCount" class="text-emerald-600">0</strong> รายการ</span>
+                <span>ยังไม่ได้รับ: <strong id="statPendingCount" class="text-amber-600">0</strong> รายการ</span>
             </div>
         </div>
     </div>
@@ -168,8 +168,8 @@
                     <i class="fa-solid fa-code text-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800">เชื่อมต่อ Google Sheets ("รับผ้าคาด")</h3>
-                    <p class="text-xs text-gray-500">บันทึกสถานะการรับของกลับไปยังชีทแบบ Real-time</p>
+                    <h3 class="text-lg font-bold text-gray-800">เชื่อมต่อ Google Sheets ("รับของ")</h3>
+                    <p class="text-xs text-gray-500">ส่งค่าติ๊กถูก (TRUE) ไปยังคอลัมน์ C ในชีท "รับของ"</p>
                 </div>
             </div>
 
@@ -178,57 +178,6 @@
                     <label class="block text-xs font-semibold text-gray-700 mb-1">Web App URL (จาก Google Apps Script)</label>
                     <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/.../exec"
                         class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <p class="text-[11px] text-gray-400 mt-1">หากยังไม่ได้เชื่อมต่อ URL ระบบจะบันทึกสถานะลงใน LocalStorage บนเบราว์เซอร์นี้แทน</p>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-xs text-gray-700 space-y-2">
-                    <p class="font-bold text-blue-800 flex items-center space-x-1">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span>วิธีนำโค้ดไปใส่ Google Sheet:</span>
-                    </p>
-                    <ol class="list-decimal pl-4 space-y-1 text-gray-600">
-                        <li>เปิด Google Sheet &gt; เมนู <strong>ส่วนขยาย (Extensions)</strong> &gt; <strong>Apps Script</strong></li>
-                        <li>วางโค้ดด้านล่างลงไปแทนที่โค้ดเดิม แล้วกดบันทึก</li>
-                        <li>กด <strong>ทำรายการใหม่ (Deploy)</strong> &gt; <strong>การทำให้ใช้งานได้ใหม่ (New deployment)</strong></li>
-                        <li>เลือกประเภท <strong>Web App</strong>, ตั้งค่า "Who has access" เป็น <strong>Anyone (ทุกคน)</strong></li>
-                        <li>คัดลอก Web App URL นำมาวางที่ช่องด้านบน</li>
-                    </ol>
-                </div>
-
-                <!-- Code Block Preview -->
-                <div class="relative">
-                    <div class="flex justify-between items-center bg-gray-800 text-gray-300 px-3 py-1.5 rounded-t-xl text-xs">
-                        <span>Code.gs</span>
-                        <button onclick="copyAppsScriptCode()" class="text-blue-300 hover:text-white flex items-center space-x-1">
-                            <i class="fa-regular fa-copy"></i>
-                            <span>คัดลอกโค้ด</span>
-                        </button>
-                    </div>
-                    <pre class="bg-gray-900 text-blue-200 p-3 rounded-b-xl text-[11px] overflow-x-auto font-mono max-h-40 custom-scrollbar" id="scriptCodeBlock">
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var studentId = data.studentId;
-    var name = data.name;
-    var status = data.status || "รับแล้ว";
-    var timestamp = new Date();
-
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("รับผ้าคาด");
-    if (!sheet) {
-      sheet = ss.insertSheet("รับผ้าคาด");
-      sheet.appendRow(["วันที่-เวลา", "รหัสนักศึกษา", "ชื่อ-นามสกุล", "สถานะ"]);
-    }
-
-    sheet.appendRow([timestamp, studentId, name, status]);
-
-    return ContentService.createTextOutput(JSON.stringify({result: "success"}))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({result: "error", error: err.toString()}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}</pre>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-2">
@@ -241,15 +190,14 @@ function doPost(e) {
 
     <!-- Application Script -->
     <script>
-        // Updated CSV Sheet URL
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGVszXcSuCtPldkD8Ov_o_mVMMeDD_-74ywPeS8ksSJZ5KA59SzfeTrFPc0Saz10xwKKp1ztwVw2Ah/pub?output=csv';
-        const STORAGE_KEY_STATUS = 'headband_received_statuses_v3';
-        const STORAGE_KEY_SCRIPT_URL = 'headband_script_url_v3';
+        const STORAGE_KEY_STATUS = 'headband_received_statuses_v4';
+        const STORAGE_KEY_SCRIPT_URL = 'headband_script_url_v4';
+        const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxh3MkSQCvaBYw6viZBEV582w1wPQPI7xnk55tAxudeezMSGyfZ0VsLJe5gQlPzQHsj/exec';
 
         let rawData = [];
         let receivedMap = {};
 
-        // Load data on startup
         window.addEventListener('DOMContentLoaded', () => {
             loadLocalStatuses();
             fetchCSVData();
@@ -280,7 +228,7 @@ function doPost(e) {
                 skipEmptyLines: true,
                 complete: function(results) {
                     if (results.data && results.data.length > 0) {
-                        processAndGroupData(results.data);
+                        processRawData(results.data);
                         statusText.textContent = 'พร้อมใช้งาน (โหลดข้อมูลเรียบร้อย)';
                         statusBadge.className = 'inline-flex items-center space-x-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold mt-3';
                     } else {
@@ -296,11 +244,10 @@ function doPost(e) {
             });
         }
 
-        // Grouping logic to eliminate duplicates and sum quantities
-        function processAndGroupData(rows) {
+        // Process data WITHOUT grouping (count every single row)
+        function processRawData(rows) {
             const keys = Object.keys(rows[0]);
             
-            // Flexible Header Matching
             const idKey = keys.find(k => k.includes('รหัส') || k.toLowerCase().includes('id')) || keys[0];
             const nameKey = keys.find(k => k.includes('ชื่อ') && !k.includes('สกุล')) || keys[1];
             const lastNameKey = keys.find(k => k.includes('สกุล')) || keys[2];
@@ -308,7 +255,7 @@ function doPost(e) {
             const whiteKey = keys.find(k => k.includes('ขาว')) || keys[4];
             const totalKey = keys.find(k => k.includes('รวม')) || keys[5];
 
-            const groupedMap = new Map();
+            rawData = [];
 
             rows.forEach((row, idx) => {
                 const id = (row[idKey] || '').toString().trim();
@@ -316,34 +263,25 @@ function doPost(e) {
                 const lastName = (row[lastNameKey] || '').toString().trim();
                 let fullName = `${firstName} ${lastName}`.trim();
 
-                // Unique Key for Grouping (Prefer ID, fallback to Full Name)
-                const groupKey = id || fullName || `STD-${idx + 1}`;
-                if (!fullName) fullName = `ผู้ซื้อ (${groupKey})`;
+                const rowUniqueId = id ? `${id}_${idx}` : `ROW_${idx + 1}`;
+                if (!fullName) fullName = `รายการที่ ${idx + 1}`;
 
                 const pink = parseInt(row[pinkKey] || '0', 10) || 0;
                 const white = parseInt(row[whiteKey] || '0', 10) || 0;
                 let total = parseInt(row[totalKey] || '0', 10);
                 if (isNaN(total) || total === 0) total = pink + white;
 
-                if (groupedMap.has(groupKey)) {
-                    // Accumulate totals for duplicate entry
-                    const existing = groupedMap.get(groupKey);
-                    existing.pink += pink;
-                    existing.white += white;
-                    existing.total += total;
-                } else {
-                    groupedMap.set(groupKey, {
-                        id: id || groupKey,
-                        name: fullName,
-                        pink: pink,
-                        white: white,
-                        total: total,
-                        isReceived: receivedMap[groupKey] === true
-                    });
-                }
+                rawData.push({
+                    rowId: rowUniqueId,
+                    id: id || '-',
+                    name: fullName,
+                    pink: pink,
+                    white: white,
+                    total: total,
+                    isReceived: receivedMap[rowUniqueId] === true
+                });
             });
 
-            rawData = Array.from(groupedMap.values());
             updateOverviewStats();
         }
 
@@ -360,16 +298,14 @@ function doPost(e) {
 
             document.getElementById('statPinkTotal').textContent = `${totalPink} ผืน`;
             document.getElementById('statWhiteTotal').textContent = `${totalWhite} ผืน`;
-            document.getElementById('statStudentTotal').textContent = `${rawData.length} คน`;
+            document.getElementById('statStudentTotal').textContent = `${rawData.length} รายการ`;
             document.getElementById('statReceivedCount').textContent = receivedCount;
             document.getElementById('statPendingCount').textContent = rawData.length - receivedCount;
         }
 
-        // Search Action
         function handleSearch(e) {
             e.preventDefault();
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            const resultContainer = document.getElementById('resultContainer');
 
             if (!query) {
                 Swal.fire({
@@ -401,7 +337,6 @@ function doPost(e) {
                             <i class="fa-solid fa-magnifying-glass text-xl"></i>
                         </div>
                         <h4 class="text-gray-700 font-bold">ไม่พบข้อมูล "${escapeHtml(query)}"</h4>
-                        <p class="text-xs text-gray-400 mt-1">โปรดตรวจสอบรหัสนักศึกษา หรือ ชื่อ-นามสกุล อีกครั้ง</p>
                     </div>
                 `;
                 return;
@@ -431,7 +366,6 @@ function doPost(e) {
                         </div>
                     </div>
 
-                    <!-- Item Quantities -->
                     <div class="py-4 space-y-2">
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">รายการผ้าคาดที่สั่งซื้อ:</p>
                         <div class="grid grid-cols-3 gap-2 text-center">
@@ -450,14 +384,13 @@ function doPost(e) {
                         </div>
                     </div>
 
-                    <!-- Action Button -->
                     <div class="pt-2">
                         ${item.isReceived ?
-                            `<button onclick="toggleReceived('${escapeHtml(item.id)}', false)" class="w-full bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-600 font-medium py-2.5 px-4 rounded-xl text-sm transition border border-gray-200 flex items-center justify-center space-x-1">
+                            `<button onclick="toggleReceived('${escapeHtml(item.rowId)}', false)" class="w-full bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-600 font-medium py-2.5 px-4 rounded-xl text-sm transition border border-gray-200 flex items-center justify-center space-x-1">
                                 <i class="fa-solid fa-rotate-left"></i>
                                 <span>ยกเลิกการรับผ้าคาด</span>
                             </button>` :
-                            `<button onclick="toggleReceived('${escapeHtml(item.id)}', true)" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-base">
+                            `<button onclick="toggleReceived('${escapeHtml(item.rowId)}', true)" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-base">
                                 <i class="fa-solid fa-hand-holding-heart"></i>
                                 <span>กดยืนยันรับผ้าคาด</span>
                             </button>`
@@ -469,8 +402,8 @@ function doPost(e) {
             });
         }
 
-        async function toggleReceived(studentId, newStatus) {
-            const item = rawData.find(d => d.id === studentId);
+        async function toggleReceived(rowId, newStatus) {
+            const item = rawData.find(d => d.rowId === rowId);
             if (!item) return;
 
             if (newStatus) {
@@ -500,9 +433,8 @@ function doPost(e) {
                 if (!result.isConfirmed) return;
             }
 
-            // Update local state & storage
             item.isReceived = newStatus;
-            receivedMap[studentId] = newStatus;
+            receivedMap[rowId] = newStatus;
             saveLocalStatuses();
             updateOverviewStats();
 
@@ -514,13 +446,11 @@ function doPost(e) {
                 });
             }
 
-            // Sync with Web App URL if available
-            const webAppUrl = localStorage.getItem(STORAGE_KEY_SCRIPT_URL);
+            const webAppUrl = localStorage.getItem(STORAGE_KEY_SCRIPT_URL) || DEFAULT_WEB_APP_URL;
             if (webAppUrl) {
-                sendToAppsScript(webAppUrl, studentId, item.name, newStatus ? 'รับแล้ว' : 'ยังไม่ได้รับ');
+                sendToAppsScript(webAppUrl, item.id, item.name, newStatus ? 'รับแล้ว' : 'ยังไม่ได้รับ');
             }
 
-            // Refresh Search View
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const matched = rawData.filter(i => i.id.toLowerCase().includes(query) || i.name.toLowerCase().includes(query));
             renderResults(matched, query);
@@ -553,7 +483,7 @@ function doPost(e) {
         }
 
         function openSettingsModal() {
-            const savedUrl = localStorage.getItem(STORAGE_KEY_SCRIPT_URL) || '';
+            const savedUrl = localStorage.getItem(STORAGE_KEY_SCRIPT_URL) || DEFAULT_WEB_APP_URL;
             document.getElementById('webAppUrlInput').value = savedUrl;
             document.getElementById('settingsModal').classList.remove('hidden');
         }
@@ -569,32 +499,11 @@ function doPost(e) {
                 Swal.fire({
                     icon: 'success',
                     title: 'บันทึกการเชื่อมต่อแล้ว',
-                    text: 'ระบบจะส่งข้อมูลไปยัง Google Sheet ชีท "รับผ้าคาด" อัตโนมัติเมื่อกดรับของ',
+                    text: 'ระบบจะส่งข้อมูลติ๊กถูกไปยังชีท "รับของ" อัตโนมัติ',
                     confirmButtonColor: '#2563eb'
                 });
-            } else {
-                localStorage.removeItem(STORAGE_KEY_SCRIPT_URL);
             }
             closeSettingsModal();
-        }
-
-        function copyAppsScriptCode() {
-            const codeText = document.getElementById('scriptCodeBlock').innerText;
-            const textarea = document.createElement('textarea');
-            textarea.value = codeText;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: 'คัดลอกโค้ดเรียบร้อยแล้ว!',
-                showConfirmButton: false,
-                timer: 1500
-            });
         }
 
         function escapeHtml(str) {
