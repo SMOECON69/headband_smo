@@ -191,8 +191,8 @@
     <!-- Application Script -->
     <script>
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGVszXcSuCtPldkD8Ov_o_mVMMeDD_-74ywPeS8ksSJZ5KA59SzfeTrFPc0Saz10xwKKp1ztwVw2Ah/pub?output=csv';
-        const STORAGE_KEY_STATUS = 'headband_received_statuses_v4';
-        const STORAGE_KEY_SCRIPT_URL = 'headband_script_url_v4';
+        const STORAGE_KEY_STATUS = 'headband_received_statuses_v5';
+        const STORAGE_KEY_SCRIPT_URL = 'headband_script_url_v5';
         const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxh3MkSQCvaBYw6viZBEV582w1wPQPI7xnk55tAxudeezMSGyfZ0VsLJe5gQlPzQHsj/exec';
 
         let rawData = [];
@@ -244,13 +244,15 @@
             });
         }
 
-        // Process data WITHOUT grouping (count every single row)
+        // Process data with flexible parsing for Pink & White columns
         function processRawData(rows) {
             const keys = Object.keys(rows[0]);
             
             const idKey = keys.find(k => k.includes('รหัส') || k.toLowerCase().includes('id')) || keys[0];
             const nameKey = keys.find(k => k.includes('ชื่อ') && !k.includes('สกุล')) || keys[1];
             const lastNameKey = keys.find(k => k.includes('สกุล')) || keys[2];
+            
+            // ค้นหาคอลัมน์สีชมพูและสีขาวแบบยืดหยุ่น
             const pinkKey = keys.find(k => k.includes('ชมพู')) || keys[3];
             const whiteKey = keys.find(k => k.includes('ขาว')) || keys[4];
             const totalKey = keys.find(k => k.includes('รวม')) || keys[5];
@@ -266,8 +268,23 @@
                 const rowUniqueId = id ? `${id}_${idx}` : `ROW_${idx + 1}`;
                 if (!fullName) fullName = `รายการที่ ${idx + 1}`;
 
-                const pink = parseInt(row[pinkKey] || '0', 10) || 0;
-                const white = parseInt(row[whiteKey] || '0', 10) || 0;
+                // ดึงค่าจำนวนสีชมพูและสีขาว (รองรับทั้งแบบตัวเลขตรงๆ หรือข้อความปนตัวเลข)
+                const pinkVal = row[pinkKey] || '0';
+                const whiteVal = row[whiteKey] || '0';
+
+                let pink = parseInt(String(pinkVal).replace(/[^0-9]/g, ''), 10) || 0;
+                let white = parseInt(String(whiteVal).replace(/[^0-9]/g, ''), 10) || 0;
+
+                // กรณีที่คอลัมน์รวมข้อความอธิบายสินค้า เช่น "สีชมพู 1 ผืน, สีขาว 2 ผืน"
+                if (pink === 0 && typeof pinkVal === 'string' && pinkVal.includes('ชมพู')) {
+                    const m = pinkVal.match(/(\d+)/);
+                    if (m) pink = parseInt(m[1], 10);
+                }
+                if (white === 0 && typeof whiteVal === 'string' && whiteVal.includes('ขาว')) {
+                    const m = whiteVal.match(/(\d+)/);
+                    if (m) white = parseInt(m[1], 10);
+                }
+
                 let total = parseInt(row[totalKey] || '0', 10);
                 if (isNaN(total) || total === 0) total = pink + white;
 
