@@ -3,462 +3,609 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบเช็กรายการรับผ้าคาด</title>
-    <!-- Google Fonts: Prompt -->
+    <title>ระบบเช็ครายการแจกผ้าคาด</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#2563eb',
+                            hoverBlue: '#1d4ed8',
+                        }
+                    },
+                    fontFamily: {
+                        kanit: ['Kanit', 'sans-serif'],
+                        mali: ['Mali', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Kanit & Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- PapaParse สำหรับอ่านไฟล์ CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- SweetAlert2 for Pretty Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --success: #10b981;
-            --success-hover: #059669;
-            --warning-bg: #fef3c7;
-            --warning-text: #d97706;
-            --danger: #ef4444;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
         body {
-            background: var(--bg-gradient);
+            font-family: 'Kanit', sans-serif;
+            background-color: #f8fafc;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: var(--text-main);
         }
-
-        .container {
-            width: 100%;
-            max-width: 650px;
-            background: var(--card-bg);
+        .main-card {
+            background: #ffffff;
             border-radius: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-            padding: 32px 28px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
         }
-
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
         }
-
-        .header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 8px;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.875rem;
-            color: #059669;
-            background: #ecfdf5;
-            padding: 6px 14px;
-            border-radius: 9999px;
-            font-weight: 500;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .search-box {
-            margin-bottom: 24px;
-        }
-
-        .search-label {
-            display: block;
-            font-size: 1rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 1rem;
-            outline: none;
-            color: var(--text-main);
-        }
-
-        .search-input:focus {
-            border-color: var(--primary);
-        }
-
-        .btn-search {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-search:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .result-card {
-            display: none;
-            background: #ffffff;
-            border: 1px solid #f1f5f9;
-            border-radius: 16px;
-            padding: 24px;
-            margin-top: 20px;
-        }
-
-        .student-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px dashed #e2e8f0;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .student-id-tag {
-            background: #eff6ff;
-            color: #1d4ed8;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: inline-block;
-        }
-
-        .student-name {
-            font-size: 1.35rem;
-            font-weight: 700;
-        }
-
-        .receive-status {
-            font-size: 0.85rem;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .receive-status.pending {
-            background: var(--warning-bg);
-            color: var(--warning-text);
-        }
-
-        .receive-status.done {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .items-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .item-card {
-            background: #f8fafc;
-            border: 1px solid #f1f5f9;
-            border-radius: 12px;
-            padding: 12px 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .item-name {
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .item-count {
-            background: #ffffff;
-            color: var(--primary);
-            font-weight: 700;
-            padding: 4px 10px;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
             border-radius: 8px;
-            font-size: 1.1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .card-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #f1f5f9;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .btn-confirm {
-            background-color: var(--success);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-confirm:disabled {
-            background-color: #cbd5e1;
-            cursor: not-allowed;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 24px;
-            color: var(--danger);
-            font-weight: 500;
-            display: none;
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col min-h-screen items-center justify-center p-4">
 
-    <div class="container">
-        <div class="header">
-            <h1>📦 ระบบเช็กรายการรับผ้าคาด</h1>
-            <div class="status-badge">
-                <span class="status-dot"></span>
-                <span id="loadStatus">กำลังโหลดข้อมูล...</span>
+    <!-- Top Settings Bar -->
+    <div class="fixed top-4 right-4 z-40">
+        <button onclick="openSettingsModal()" class="bg-white hover:bg-gray-100 text-gray-600 px-3.5 py-2 rounded-2xl text-xs font-medium shadow-sm border border-gray-200 transition flex items-center space-x-2">
+            <i class="fa-solid fa-gear text-gray-500"></i>
+            <span>ตั้งค่า Google Sheet</span>
+        </button>
+    </div>
+
+    <!-- Main Container Card -->
+    <div class="w-full max-w-xl">
+        <!-- Search Card UI (Matched to Image) -->
+        <div class="main-card p-6 sm:p-10 mb-6">
+            <!-- Header Title -->
+            <div class="text-center mb-6">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-blue-600 flex items-center justify-center gap-2.5">
+                    <span class="text-3xl sm:text-4xl">📦</span>
+                    <span>ระบบเช็ครายการแจกของ</span>
+                </h1>
+                
+                <!-- Status Badge -->
+                <div id="statusBadge" class="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold mt-3">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span id="statusText">กำลังดึงข้อมูล...</span>
+                </div>
             </div>
-        </div>
 
-        <div class="search-box">
-            <label class="search-label" for="searchInput">กรอกรหัสนักศึกษา หรือ ชื่อ-นามสกุล:</label>
-            <div class="input-group">
-                <input type="text" id="searchInput" class="search-input" placeholder="เช่น 671610105 หรือ ชื่นกมล" autocomplete="off">
-                <button id="btnSearch" class="btn-search">ค้นหา</button>
-            </div>
-        </div>
-
-        <div id="emptyState" class="empty-state">
-            ⚠️ ไม่พบข้อมูลนักศึกษา กรุณาตรวจสอบรหัสหรือชื่ออีกครั้ง
-        </div>
-
-        <div id="resultCard" class="result-card">
-            <div class="student-header">
+            <!-- Search Form -->
+            <form onsubmit="handleSearch(event)" class="space-y-4">
                 <div>
-                    <span class="student-id-tag">🎓 รหัสนักศึกษา: <span id="resStudentId">-</span></span>
-                    <h2 class="student-name" id="resStudentName">-</h2>
+                    <label for="searchInput" class="block text-gray-700 font-medium text-base sm:text-lg mb-2">
+                        กรอกรหัสนักศึกษา หรือ ชื่อ-นามสกุล:
+                    </label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="searchInput" 
+                            placeholder="เช่น 671610105 หรือ ชื่นกมล" 
+                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-2xl text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-base placeholder-gray-400">
+                        
+                        <button type="submit" id="btnSearch" 
+                            class="w-full sm:w-32 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold py-3 px-6 rounded-2xl shadow-md transition flex items-center justify-center text-base shrink-0">
+                            <span>ค้นหา</span>
+                        </button>
+                    </div>
                 </div>
-                <div id="statusBadge" class="receive-status pending">
-                    ⏳ ยังไม่ได้รับผ้าคาด
+            </form>
+        </div>
+
+        <!-- Search Results Container -->
+        <div id="resultContainer" class="hidden space-y-4">
+            <!-- Dynamic Result Card will be inserted here -->
+        </div>
+
+        <!-- System Stats / Overview toggle -->
+        <div class="text-center mt-6">
+            <button onclick="toggleOverviewModal()" class="text-xs text-gray-400 hover:text-gray-600 underline">
+                ดูยอดสรุปจำนวนผืนทั้งหมดในระบบ
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Stats Overview -->
+    <div id="overviewModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button onclick="toggleOverviewModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-blue-600"></i>
+                <span>สรุปยอดรายการแจกผ้าคาด</span>
+            </h3>
+
+            <div class="grid grid-cols-2 gap-3 text-center mb-4">
+                <div class="bg-pink-50 p-4 rounded-2xl border border-pink-100">
+                    <p class="text-xs text-pink-600 font-medium">สีชมพูทั้งหมด</p>
+                    <h4 id="statPinkTotal" class="text-2xl font-bold text-pink-700 mt-1">0 ผืน</h4>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <p class="text-xs text-gray-600 font-medium">สีขาวทั้งหมด</p>
+                    <h4 id="statWhiteTotal" class="text-2xl font-bold text-gray-700 mt-1">0 ผืน</h4>
                 </div>
             </div>
 
-            <div class="items-title">🛍️ รายการผ้าคาดที่ได้รับ</div>
-            <div id="itemsGrid" class="items-grid"></div>
+            <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex justify-between items-center text-sm">
+                <span class="text-blue-800 font-medium">จำนวนผู้มีสิทธิ์รับผ้าคาด (รวมตามคน):</span>
+                <span id="statStudentTotal" class="font-bold text-blue-900 text-lg">0 คน</span>
+            </div>
 
-            <div class="card-footer">
-                <span style="font-size: 0.8rem; color: var(--text-muted);">กดปุ่มยืนยันเมื่อส่งมอบสินค้าเรียบร้อย</span>
-                <button id="btnConfirm" class="btn-confirm">
-                    🎀 ยืนยันรับผ้าคาดแล้ว
-                </button>
+            <div class="mt-3 flex justify-between text-xs text-gray-500">
+                <span>รับของไปแล้ว: <strong id="statReceivedCount" class="text-emerald-600">0</strong> คน</span>
+                <span>ยังไม่ได้รับ: <strong id="statPendingCount" class="text-amber-600">0</strong> คน</span>
             </div>
         </div>
     </div>
 
+    <!-- Settings Modal for Google Apps Script -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="p-3 bg-blue-100 text-blue-600 rounded-2xl">
+                    <i class="fa-solid fa-code text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">เชื่อมต่อ Google Sheets ("รับผ้าคาด")</h3>
+                    <p class="text-xs text-gray-500">บันทึกสถานะการรับของกลับไปยังชีทแบบ Real-time</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Web App URL (จาก Google Apps Script)</label>
+                    <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/.../exec"
+                        class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <p class="text-[11px] text-gray-400 mt-1">หากยังไม่ได้เชื่อมต่อ URL ระบบจะบันทึกสถานะลงใน LocalStorage บนเบราว์เซอร์นี้แทน</p>
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-xs text-gray-700 space-y-2">
+                    <p class="font-bold text-blue-800 flex items-center space-x-1">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>วิธีนำโค้ดไปใส่ Google Sheet:</span>
+                    </p>
+                    <ol class="list-decimal pl-4 space-y-1 text-gray-600">
+                        <li>เปิด Google Sheet &gt; เมนู <strong>ส่วนขยาย (Extensions)</strong> &gt; <strong>Apps Script</strong></li>
+                        <li>วางโค้ดด้านล่างลงไปแทนที่โค้ดเดิม แล้วกดบันทึก</li>
+                        <li>กด <strong>ทำรายการใหม่ (Deploy)</strong> &gt; <strong>การทำให้ใช้งานได้ใหม่ (New deployment)</strong></li>
+                        <li>เลือกประเภท <strong>Web App</strong>, ตั้งค่า "Who has access" เป็น <strong>Anyone (ทุกคน)</strong></li>
+                        <li>คัดลอก Web App URL นำมาวางที่ช่องด้านบน</li>
+                    </ol>
+                </div>
+
+                <!-- Code Block Preview -->
+                <div class="relative">
+                    <div class="flex justify-between items-center bg-gray-800 text-gray-300 px-3 py-1.5 rounded-t-xl text-xs">
+                        <span>Code.gs</span>
+                        <button onclick="copyAppsScriptCode()" class="text-blue-300 hover:text-white flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i>
+                            <span>คัดลอกโค้ด</span>
+                        </button>
+                    </div>
+                    <pre class="bg-gray-900 text-blue-200 p-3 rounded-b-xl text-[11px] overflow-x-auto font-mono max-h-40 custom-scrollbar" id="scriptCodeBlock">
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var studentId = data.studentId;
+    var name = data.name;
+    var status = data.status || "รับแล้ว";
+    var timestamp = new Date();
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("รับผ้าคาด");
+    if (!sheet) {
+      sheet = ss.insertSheet("รับผ้าคาด");
+      sheet.appendRow(["วันที่-เวลา", "รหัสนักศึกษา", "ชื่อ-นามสกุล", "สถานะ"]);
+    }
+
+    sheet.appendRow([timestamp, studentId, name, status]);
+
+    return ContentService.createTextOutput(JSON.stringify({result: "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({result: "error", error: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button onclick="closeSettingsModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-xl hover:bg-gray-300">ยกเลิก</button>
+                    <button onclick="saveSettings()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md transition">บันทึกตั้งค่า</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
     <script>
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5VrZmk8hcCzBVb9H6LYVv_x30cg5_QwGMG90DZv73cPyF_eyN18pBE92uP2xpekqJZb029vWlzurr/pub?output=csv";
-        let sheetData = [];
-        let currentStudent = null;
+        // Updated CSV Sheet URL
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGVszXcSuCtPldkD8Ov_o_mVMMeDD_-74ywPeS8ksSJZ5KA59SzfeTrFPc0Saz10xwKKp1ztwVw2Ah/pub?output=csv';
+        const STORAGE_KEY_STATUS = 'headband_received_statuses_v3';
+        const STORAGE_KEY_SCRIPT_URL = 'headband_script_url_v3';
 
-        const loadStatus = document.getElementById('loadStatus');
-        const searchInput = document.getElementById('searchInput');
-        const btnSearch = document.getElementById('btnSearch');
-        const resultCard = document.getElementById('resultCard');
-        const emptyState = document.getElementById('emptyState');
-        const resStudentId = document.getElementById('resStudentId');
-        const resStudentName = document.getElementById('resStudentName');
-        const statusBadge = document.getElementById('statusBadge');
-        const itemsGrid = document.getElementById('itemsGrid');
-        const btnConfirm = document.getElementById('btnConfirm');
+        let rawData = [];
+        let receivedMap = {};
 
-        // โหลดไฟล์ CSV
+        // Load data on startup
         window.addEventListener('DOMContentLoaded', () => {
+            loadLocalStatuses();
+            fetchCSVData();
+        });
+
+        function loadLocalStatuses() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY_STATUS);
+                if (saved) receivedMap = JSON.parse(saved);
+            } catch (e) {
+                receivedMap = {};
+            }
+        }
+
+        function saveLocalStatuses() {
+            try {
+                localStorage.setItem(STORAGE_KEY_STATUS, JSON.stringify(receivedMap));
+            } catch (e) {}
+        }
+
+        function fetchCSVData() {
+            const statusText = document.getElementById('statusText');
+            const statusBadge = document.getElementById('statusBadge');
+
             Papa.parse(CSV_URL, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    sheetData = results.data;
-                    loadStatus.textContent = "พร้อมใช้งาน (โหลดข้อมูลเรียบร้อย)";
+                    if (results.data && results.data.length > 0) {
+                        processAndGroupData(results.data);
+                        statusText.textContent = 'พร้อมใช้งาน (โหลดข้อมูลเรียบร้อย)';
+                        statusBadge.className = 'inline-flex items-center space-x-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold mt-3';
+                    } else {
+                        statusText.textContent = 'ไม่พบข้อมูลในระบบ';
+                        statusBadge.className = 'inline-flex items-center space-x-2 bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-semibold mt-3';
+                    }
                 },
                 error: function(err) {
-                    loadStatus.textContent = "เกิดข้อผิดพลาดในการโหลด CSV";
-                    loadStatus.parentElement.style.color = "#ef4444";
+                    console.error('Error fetching CSV:', err);
+                    statusText.textContent = 'ไม่สามารถดึงข้อมูลได้';
+                    statusBadge.className = 'inline-flex items-center space-x-2 bg-rose-50 text-rose-600 px-3 py-1 rounded-full text-xs font-semibold mt-3';
                 }
             });
-        });
+        }
 
-        btnSearch.addEventListener('click', handleSearch);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSearch();
-        });
+        // Grouping logic to eliminate duplicates and sum quantities
+        function processAndGroupData(rows) {
+            const keys = Object.keys(rows[0]);
+            
+            // Flexible Header Matching
+            const idKey = keys.find(k => k.includes('รหัส') || k.toLowerCase().includes('id')) || keys[0];
+            const nameKey = keys.find(k => k.includes('ชื่อ') && !k.includes('สกุล')) || keys[1];
+            const lastNameKey = keys.find(k => k.includes('สกุล')) || keys[2];
+            const pinkKey = keys.find(k => k.includes('ชมพู')) || keys[3];
+            const whiteKey = keys.find(k => k.includes('ขาว')) || keys[4];
+            const totalKey = keys.find(k => k.includes('รวม')) || keys[5];
 
-        function handleSearch() {
-            try {
-                const query = searchInput.value.trim().toLowerCase();
-                if (!query) return;
+            const groupedMap = new Map();
 
-                resultCard.style.display = 'none';
-                emptyState.style.display = 'none';
+            rows.forEach((row, idx) => {
+                const id = (row[idKey] || '').toString().trim();
+                const firstName = (row[nameKey] || '').toString().trim();
+                const lastName = (row[lastNameKey] || '').toString().trim();
+                let fullName = `${firstName} ${lastName}`.trim();
 
-                // ค้นหาคำค้นจากทุกคอลัมน์ในแถว
-                const matched = sheetData.find(row => {
-                    return Object.values(row).some(val => 
-                        String(val || '').trim().toLowerCase().includes(query)
-                    );
+                // Unique Key for Grouping (Prefer ID, fallback to Full Name)
+                const groupKey = id || fullName || `STD-${idx + 1}`;
+                if (!fullName) fullName = `ผู้ซื้อ (${groupKey})`;
+
+                const pink = parseInt(row[pinkKey] || '0', 10) || 0;
+                const white = parseInt(row[whiteKey] || '0', 10) || 0;
+                let total = parseInt(row[totalKey] || '0', 10);
+                if (isNaN(total) || total === 0) total = pink + white;
+
+                if (groupedMap.has(groupKey)) {
+                    // Accumulate totals for duplicate entry
+                    const existing = groupedMap.get(groupKey);
+                    existing.pink += pink;
+                    existing.white += white;
+                    existing.total += total;
+                } else {
+                    groupedMap.set(groupKey, {
+                        id: id || groupKey,
+                        name: fullName,
+                        pink: pink,
+                        white: white,
+                        total: total,
+                        isReceived: receivedMap[groupKey] === true
+                    });
+                }
+            });
+
+            rawData = Array.from(groupedMap.values());
+            updateOverviewStats();
+        }
+
+        function updateOverviewStats() {
+            let totalPink = 0;
+            let totalWhite = 0;
+            let receivedCount = 0;
+
+            rawData.forEach(item => {
+                totalPink += item.pink;
+                totalWhite += item.white;
+                if (item.isReceived) receivedCount++;
+            });
+
+            document.getElementById('statPinkTotal').textContent = `${totalPink} ผืน`;
+            document.getElementById('statWhiteTotal').textContent = `${totalWhite} ผืน`;
+            document.getElementById('statStudentTotal').textContent = `${rawData.length} คน`;
+            document.getElementById('statReceivedCount').textContent = receivedCount;
+            document.getElementById('statPendingCount').textContent = rawData.length - receivedCount;
+        }
+
+        // Search Action
+        function handleSearch(e) {
+            e.preventDefault();
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultContainer = document.getElementById('resultContainer');
+
+            if (!query) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'โปรดกรอกข้อมูล',
+                    text: 'กรุณากรอกรหัสนักศึกษา หรือ ชื่อ-นามสกุล ที่ต้องการค้นหา',
+                    confirmButtonColor: '#2563eb'
+                });
+                return;
+            }
+
+            const matched = rawData.filter(item => 
+                item.id.toLowerCase().includes(query) || 
+                item.name.toLowerCase().includes(query)
+            );
+
+            renderResults(matched, query);
+        }
+
+        function renderResults(results, query) {
+            const container = document.getElementById('resultContainer');
+            container.classList.remove('hidden');
+            container.innerHTML = '';
+
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div class="main-card p-6 text-center">
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass text-xl"></i>
+                        </div>
+                        <h4 class="text-gray-700 font-bold">ไม่พบข้อมูล "${escapeHtml(query)}"</h4>
+                        <p class="text-xs text-gray-400 mt-1">โปรดตรวจสอบรหัสนักศึกษา หรือ ชื่อ-นามสกุล อีกครั้ง</p>
+                    </div>
+                `;
+                return;
+            }
+
+            results.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `main-card p-6 border-l-4 transition ${item.isReceived ? 'border-l-emerald-500 bg-emerald-50/20' : 'border-l-blue-600'}`;
+
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-gray-100">
+                        <div>
+                            <span class="text-xs font-mono font-bold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-md">
+                                ${escapeHtml(item.id)}
+                            </span>
+                            <h3 class="text-xl font-bold text-gray-800 mt-1">${escapeHtml(item.name)}</h3>
+                        </div>
+                        <div>
+                            ${item.isReceived ? 
+                                `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                    <i class="fa-solid fa-circle-check mr-1.5 text-emerald-500"></i> รับแล้ว
+                                </span>` : 
+                                `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                    <i class="fa-regular fa-clock mr-1.5 text-amber-500"></i> ยังไม่ได้รับ
+                                </span>`
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Item Quantities -->
+                    <div class="py-4 space-y-2">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">รายการผ้าคาดที่สั่งซื้อ:</p>
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="bg-pink-50 p-3 rounded-xl border border-pink-100">
+                                <span class="text-xs text-pink-600 block font-medium">สีชมพู</span>
+                                <span class="text-lg font-bold text-pink-700">${item.pink} ผืน</span>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                <span class="text-xs text-gray-600 block font-medium">สีขาว</span>
+                                <span class="text-lg font-bold text-gray-700">${item.white} ผืน</span>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                <span class="text-xs text-blue-600 block font-medium">รวมทั้งหมด</span>
+                                <span class="text-lg font-bold text-blue-800">${item.total} ผืน</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="pt-2">
+                        ${item.isReceived ?
+                            `<button onclick="toggleReceived('${escapeHtml(item.id)}', false)" class="w-full bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-600 font-medium py-2.5 px-4 rounded-xl text-sm transition border border-gray-200 flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>ยกเลิกการรับผ้าคาด</span>
+                            </button>` :
+                            `<button onclick="toggleReceived('${escapeHtml(item.id)}', true)" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-base">
+                                <i class="fa-solid fa-hand-holding-heart"></i>
+                                <span>กดยืนยันรับผ้าคาด</span>
+                            </button>`
+                        }
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        async function toggleReceived(studentId, newStatus) {
+            const item = rawData.find(d => d.id === studentId);
+            if (!item) return;
+
+            if (newStatus) {
+                const result = await Swal.fire({
+                    title: 'ยืนยันการรับผ้าคาด?',
+                    html: `
+                        <div class="text-left bg-gray-50 p-4 rounded-2xl border border-gray-200 text-sm space-y-2 mt-2">
+                            <p><strong>ผู้รับ:</strong> ${escapeHtml(item.name)} (${escapeHtml(item.id)})</p>
+                            <hr>
+                            <p class="text-blue-700 font-bold">รายการที่จะได้รับ:</p>
+                            <ul class="list-disc pl-5 space-y-1">
+                                ${item.pink > 0 ? `<li>สีชมพู: <strong class="text-pink-600">${item.pink}</strong> ผืน</li>` : ''}
+                                ${item.white > 0 ? `<li>สีขาว: <strong class="text-gray-700">${item.white}</strong> ผืน</li>` : ''}
+                            </ul>
+                            <p class="text-right text-xs text-blue-900 font-extrabold pt-1">รวมทั้งสิ้น ${item.total} ผืน</p>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยันรับของเรียบร้อย',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6b7280',
+                    customClass: { popup: 'rounded-3xl' }
                 });
 
-                if (matched) {
-                    currentStudent = matched;
-                    renderStudentCard(matched);
-                } else {
-                    emptyState.style.display = 'block';
-                }
-            } catch (err) {
-                console.error(err);
-                emptyState.textContent = "⚠️ เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
-                emptyState.style.display = 'block';
-            }
-        }
-
-        function renderStudentCard(data) {
-            const keys = Object.keys(data);
-            
-            // ค้นหาคอลัมน์รหัสนักศึกษาและชื่ออัตโนมัติ
-            let studentId = '-';
-            let studentName = '-';
-
-            keys.forEach(k => {
-                const val = String(data[k] || '').trim();
-                const lk = k.toLowerCase();
-                // เช็ครหัสนักศึกษา (ตัวเลข 8-10 หลัก)
-                if (lk.includes('รหัส') || (/^\d{8,10}$/.test(val))) {
-                    if (studentId === '-') studentId = val;
-                }
-                // เช็คชื่อ-นามสกุล
-                else if (lk.includes('ชื่อ') || lk.includes('นามสกุล') || lk.includes('name')) {
-                    if (studentName === '-') studentName = val;
-                }
-            });
-
-            // สำรองหากหาคอลัมน์ไม่เจอ ให้ใช้คอลัมน์ตำแหน่ง 0 และ 1
-            if (studentId === '-') studentId = data[keys[0]] || '-';
-            if (studentName === '-') studentName = data[keys[1]] || '-';
-
-            resStudentId.textContent = studentId;
-            resStudentName.textContent = studentName;
-
-            itemsGrid.innerHTML = '';
-
-            // รายชื่อคำที่ไม่ใช่ผ้าคาด ให้กรองทิ้ง
-            const ignoreKeywords = [
-                'เวลา', 'timestamp', 'date', 'ตรวจ', 'สถานะ', 'mail', 
-                'เบอร์', 'โทร', 'สลิป', 'ออเดอร์', 'รวม', 'ยอด', '_1', '_2', '_3',
-                'รหัส', 'ชื่อ', 'นามสกุล', 'ชั้นปี'
-            ];
-
-            keys.forEach(key => {
-                const val = String(data[key] || '').trim();
-                const lowerKey = key.toLowerCase();
-
-                // ข้ามคอลัมน์ที่เป็นข้อมูลส่วนตัว/การเงิน/วันที่/ตรวจแล้ว
-                const isIgnored = ignoreKeywords.some(kw => lowerKey.includes(kw)) ||
-                                  /^\d{1,2}\/\d{1,2}\/\d{4}/.test(val) ||
-                                  val === 'ตรวจแล้ว';
-
-                if (!isIgnored) {
-                    const numVal = parseFloat(val);
-                    // แสดงเฉพาะคอลัมน์ที่มีจำนวนสั่งซื้อ
-                    if (val && val !== '-' && (isNaN(numVal) || numVal > 0)) {
-                        const itemCard = document.createElement('div');
-                        itemCard.className = 'item-card';
-                        itemCard.innerHTML = `
-                            <span class="item-name">${key}</span>
-                            <span class="item-count">${val}</span>
-                        `;
-                        itemsGrid.appendChild(itemCard);
-                    }
-                }
-            });
-
-            if (itemsGrid.children.length === 0) {
-                itemsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">ไม่พบรายการผ้าคาด</div>';
+                if (!result.isConfirmed) return;
             }
 
-            const isReceived = localStorage.getItem(`received_${studentId}`);
-            setCardReceivedState(!!isReceived);
-            resultCard.style.display = 'block';
+            // Update local state & storage
+            item.isReceived = newStatus;
+            receivedMap[studentId] = newStatus;
+            saveLocalStatuses();
+            updateOverviewStats();
+
+            if (newStatus) {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            // Sync with Web App URL if available
+            const webAppUrl = localStorage.getItem(STORAGE_KEY_SCRIPT_URL);
+            if (webAppUrl) {
+                sendToAppsScript(webAppUrl, studentId, item.name, newStatus ? 'รับแล้ว' : 'ยังไม่ได้รับ');
+            }
+
+            // Refresh Search View
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const matched = rawData.filter(i => i.id.toLowerCase().includes(query) || i.name.toLowerCase().includes(query));
+            renderResults(matched, query);
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: newStatus ? 'success' : 'info',
+                title: newStatus ? `บันทึกการรับผ้าคาดเรียบร้อย` : `ยกเลิกสถานะรับผ้าคาดแล้ว`,
+                showConfirmButton: false,
+                timer: 2000
+            });
         }
 
-        function setCardReceivedState(isReceived) {
-            if (isReceived) {
-                statusBadge.className = 'receive-status done';
-                statusBadge.textContent = '✅ รับผ้าคาดเรียบร้อยแล้ว';
-                btnConfirm.disabled = true;
-                btnConfirm.textContent = '✔ รับของเรียบร้อยแล้ว';
+        function sendToAppsScript(url, studentId, name, status) {
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: studentId,
+                    name: name,
+                    status: status
+                })
+            }).catch(e => console.warn('Sync error:', e));
+        }
+
+        function toggleOverviewModal() {
+            document.getElementById('overviewModal').classList.toggle('hidden');
+        }
+
+        function openSettingsModal() {
+            const savedUrl = localStorage.getItem(STORAGE_KEY_SCRIPT_URL) || '';
+            document.getElementById('webAppUrlInput').value = savedUrl;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const url = document.getElementById('webAppUrlInput').value.trim();
+            if (url) {
+                localStorage.setItem(STORAGE_KEY_SCRIPT_URL, url);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกการเชื่อมต่อแล้ว',
+                    text: 'ระบบจะส่งข้อมูลไปยัง Google Sheet ชีท "รับผ้าคาด" อัตโนมัติเมื่อกดรับของ',
+                    confirmButtonColor: '#2563eb'
+                });
             } else {
-                statusBadge.className = 'receive-status pending';
-                statusBadge.textContent = '⏳ ยังไม่ได้รับผ้าคาด';
-                btnConfirm.disabled = false;
-                btnConfirm.textContent = 'ยืนยันรับผ้าคาดแล้ว';
+                localStorage.removeItem(STORAGE_KEY_SCRIPT_URL);
             }
+            closeSettingsModal();
         }
 
-        btnConfirm.addEventListener('click', () => {
-            if (!currentStudent) return;
-            const studentId = resStudentId.textContent;
-            
-            localStorage.setItem(`received_${studentId}`, 'true');
-            setCardReceivedState(true);
-        });
+        function copyAppsScriptCode() {
+            const codeText = document.getElementById('scriptCodeBlock').innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = codeText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'คัดลอกโค้ดเรียบร้อยแล้ว!',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
     </script>
 </body>
 </html>
