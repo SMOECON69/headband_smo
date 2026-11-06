@@ -62,7 +62,7 @@
             
             <!-- Title with Icon -->
             <div class="flex items-center justify-center gap-3 text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
-                <span class="text-3xl sm:text-4xl"></span>
+                <span class="text-3xl sm:text-4xl">🎀</span>
                 <h1 class="tracking-wide">ระบบเช็กรายการรับผ้าคาด</h1>
             </div>
 
@@ -323,13 +323,12 @@ function doPost(e) {
             resultArea.classList.remove('hidden');
             const receivedMap = getReceivedMap();
 
-            let html = `<div class="space-y-4">`;
+            let html = `<div class="space-y-5">`;
 
             list.forEach((item, idx) => {
-                // Try to find common key names from CSV dynamically
                 const keys = Object.keys(item);
                 
-                // Identify potential field names
+                // Identify standard fields
                 const idKey = keys.find(k => k.includes('รหัส') || k.toLowerCase().includes('id')) || keys[0];
                 const nameKey = keys.find(k => k.includes('ชื่อ') || k.includes('นามสกุล') || k.toLowerCase().includes('name')) || keys[1] || keys[0];
                 
@@ -341,17 +340,22 @@ function doPost(e) {
                 const isReceived = Boolean(receivedMap[recordKey]);
                 const receivedTime = receivedMap[recordKey] || '';
 
-                // Extra Fields
-                const extraFields = keys.filter(k => k !== idKey && k !== nameKey);
+                // Filter non-id & non-name columns as product/item quantities
+                const productFields = keys.filter(k => k !== idKey && k !== nameKey && item[k] !== undefined && item[k] !== '');
+
+                // Format summary string for logging
+                const itemSummaryText = productFields.map(k => `${k}: ${item[k]}`).join(', ');
 
                 html += `
-                <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-100 transition-all hover:border-blue-200">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
-                        <div class="space-y-1">
-                            <span class="inline-block bg-blue-50 text-blue-600 text-xs font-semibold px-2.5 py-1 rounded-lg">
-                                <i class="fa-solid fa-id-card mr-1"></i> ${escapeHtml(idKey)}: ${escapeHtml(studentId)}
-                            </span>
-                            <h3 class="text-xl font-bold text-slate-800">
+                <div class="bg-white rounded-3xl p-6 sm:p-7 card-shadow border border-slate-100 transition-all hover:border-blue-200">
+                    <!-- Top Info Header -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5 mb-5">
+                        <div class="space-y-1.5">
+                            <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-xl border border-blue-100">
+                                <i class="fa-solid fa-graduation-cap text-blue-500"></i>
+                                <span>รหัสนักศึกษา: ${escapeHtml(studentId)}</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-slate-800 tracking-tight">
                                 ${escapeHtml(studentName)}
                             </h3>
                         </div>
@@ -359,46 +363,59 @@ function doPost(e) {
                         <!-- Status Badge -->
                         <div id="status-badge-${idx}">
                             ${isReceived ? `
-                                <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                <div class="flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                     <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
                                     <span>รับผ้าคาดเรียบร้อยแล้ว</span>
                                 </div>
                             ` : `
-                                <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-semibold bg-amber-50 text-amber-600 border border-amber-200">
-                                    <i class="fa-solid fa-clock text-amber-500"></i>
+                                <div class="flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <i class="fa-solid fa-clock-rotate-left text-amber-500"></i>
                                     <span>ยังไม่ได้รับผ้าคาด</span>
                                 </div>
                             `}
                         </div>
                     </div>
 
-                    <!-- Detail Fields -->
-                    ${extraFields.length > 0 ? `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600 mb-5 bg-slate-50 p-3.5 rounded-2xl">
-                            ${extraFields.map(fk => `
-                                <div>
-                                    <span class="font-medium text-slate-400 text-xs">${escapeHtml(fk)}:</span> 
-                                    <span class="text-slate-700 font-semibold">${escapeHtml(item[fk] || '-')}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
+                    <!-- รายการสินค้าและผ้าคาดแต่ละชนิด -->
+                    <div class="mb-6 space-y-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-boxes-packing text-blue-500"></i>
+                            รายการผ้าคาด / สินค้าที่ได้รับ
+                        </h4>
+                        
+                        ${productFields.length > 0 ? `
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                ${productFields.map(fk => `
+                                    <div class="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-blue-50/40 rounded-2xl border border-slate-100 transition-colors">
+                                        <span class="text-sm font-medium text-slate-600">${escapeHtml(fk)}</span>
+                                        <span class="inline-flex items-center justify-center px-3 py-1 bg-white border border-slate-200 rounded-xl font-bold text-blue-600 text-sm shadow-sm">
+                                            ${escapeHtml(item[fk])}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <div class="p-4 bg-slate-50 rounded-2xl text-center text-xs text-slate-400">
+                                ไม่พบข้อมูลยอดสินค้าเพิ่มเติม
+                            </div>
+                        `}
+                    </div>
 
-                    <!-- Action Button & Received Time -->
-                    <div id="action-area-${idx}" class="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <!-- Action Button & Timestamp Area -->
+                    <div id="action-area-${idx}" class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                         ${isReceived ? `
-                            <p class="text-xs text-slate-400">
-                                <i class="fa-regular fa-clock mr-1"></i> บันทึกเมื่อ: ${escapeHtml(receivedTime)}
+                            <p class="text-xs text-slate-400 font-medium">
+                                <i class="fa-regular fa-calendar-check mr-1 text-emerald-500"></i> บันทึกเมื่อ: ${escapeHtml(receivedTime)}
                             </p>
-                            <button disabled class="w-full sm:w-auto bg-slate-100 text-slate-400 font-medium px-6 py-2.5 rounded-2xl text-sm cursor-not-allowed">
-                                <i class="fa-solid fa-check mr-1.5"></i> ได้รับเรียบร้อยแล้ว
+                            <button disabled class="w-full sm:w-auto bg-slate-100 text-slate-400 font-semibold px-6 py-3 rounded-2xl text-sm cursor-not-allowed">
+                                <i class="fa-solid fa-check-double mr-1.5"></i> ได้รับเรียบร้อยแล้ว
                             </button>
                         ` : `
-                            <p class="text-xs text-slate-400">กดยืนยันเมื่อส่งมอบผ้าคาดเรียบร้อยแล้ว</p>
-                            <button onclick="confirmReceive('${escapeHtml(recordKey)}', '${escapeHtml(studentId)}', '${escapeHtml(studentName)}', ${idx})" 
-                                class="btn-glow w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-2xl text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-500/20">
+                            <p class="text-xs text-slate-400">กดยืนยันเมื่อทำการส่งมอบสินค้า/ผ้าคาดครบถ้วน</p>
+                            <button onclick="confirmReceive('${escapeHtml(recordKey)}', '${escapeHtml(studentId)}', '${escapeHtml(studentName)}', '${escapeHtml(itemSummaryText)}', ${idx})" 
+                                class="btn-glow w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-7 py-3 rounded-2xl text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20">
                                 <i class="fa-solid fa-ribbon text-base"></i>
-                                <span>ยืนยันรับผ้าคาดแล้ว</span>
+                                <span>ยืนยันการรับผ้าคาด</span>
                             </button>
                         `}
                     </div>
@@ -426,7 +443,7 @@ function doPost(e) {
         }
 
         // Handle Receive Action
-        async function confirmReceive(recordKey, studentId, studentName, idx) {
+        async function confirmReceive(recordKey, studentId, studentName, itemSummary, idx) {
             const now = new Date();
             const timeStr = now.toLocaleDateString('th-TH', { 
                 year: 'numeric', month: 'short', day: 'numeric', 
@@ -442,7 +459,7 @@ function doPost(e) {
 
             if (badgeArea) {
                 badgeArea.innerHTML = `
-                    <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200 animate-bounce">
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 animate-bounce">
                         <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
                         <span>รับผ้าคาดเรียบร้อยแล้ว</span>
                     </div>
@@ -451,11 +468,11 @@ function doPost(e) {
 
             if (actionArea) {
                 actionArea.innerHTML = `
-                    <p class="text-xs text-slate-400">
-                        <i class="fa-regular fa-clock mr-1"></i> บันทึกเมื่อ: ${timeStr}
+                    <p class="text-xs text-slate-400 font-medium">
+                        <i class="fa-regular fa-calendar-check mr-1 text-emerald-500"></i> บันทึกเมื่อ: ${timeStr}
                     </p>
-                    <button disabled class="w-full sm:w-auto bg-slate-100 text-slate-400 font-medium px-6 py-2.5 rounded-2xl text-sm cursor-not-allowed">
-                        <i class="fa-solid fa-check mr-1.5"></i> ได้รับเรียบร้อยแล้ว
+                    <button disabled class="w-full sm:w-auto bg-slate-100 text-slate-400 font-semibold px-6 py-3 rounded-2xl text-sm cursor-not-allowed">
+                        <i class="fa-solid fa-check-double mr-1.5"></i> ได้รับเรียบร้อยแล้ว
                     </button>
                 `;
             }
@@ -463,7 +480,6 @@ function doPost(e) {
             // 3. Post to Google Apps Script Web App Endpoint if configured
             if (webAppUrl) {
                 try {
-                    // Use no-mode cors / fetch request for Apps Script
                     fetch(webAppUrl, {
                         method: 'POST',
                         mode: 'no-cors',
@@ -471,7 +487,7 @@ function doPost(e) {
                         body: JSON.stringify({
                             studentId: studentId,
                             name: studentName,
-                            details: `รับผ้าคาดเมื่อ ${timeStr}`,
+                            details: itemSummary || 'รับผ้าคาดเรียบร้อย',
                             timestamp: new Date().toISOString()
                         })
                     });
