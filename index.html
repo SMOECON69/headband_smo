@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบเช็กรายการรับผ้าคาด</title>
-    <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <!-- PapaParse for CSV parsing -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         :root {
@@ -29,7 +27,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Prompt', sans-serif;
         }
 
         body {
@@ -47,6 +45,385 @@
             max-width: 650px;
             background: var(--card-bg);
             border-radius: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
             padding: 32px 28px;
-            transition
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+            color: #059669;
+            background: #ecfdf5;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .search-box {
+            margin-bottom: 24px;
+        }
+
+        .search-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-search {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-search:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .result-card {
+            display: none;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px dashed #e2e8f0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .student-id-tag {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+
+        .student-name {
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+
+        .receive-status {
+            font-size: 0.85rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .receive-status.pending {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .receive-status.done {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .items-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .item-card {
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .item-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .item-count {
+            background: #ffffff;
+            color: var(--primary);
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn-confirm {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-confirm:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: var(--danger);
+            font-weight: 500;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>📦 ระบบเช็กรายการรับผ้าคาด</h1>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span id="loadStatus">กำลังโหลดข้อมูล...</span>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <label class="search-label" for="searchInput">กรอกรหัสนักศึกษา หรือ ชื่อ-นามสกุล:</label>
+            <div class="input-group">
+                <input type="text" id="searchInput" class="search-input" placeholder="เช่น 671610105 หรือ ชื่นกมล" autocomplete="off">
+                <button id="btnSearch" class="btn-search">ค้นหา</button>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            ⚠️ ไม่พบข้อมูลนักศึกษา กรุณาตรวจสอบรหัสหรือชื่ออีกครั้ง
+        </div>
+
+        <div id="resultCard" class="result-card">
+            <div class="student-header">
+                <div>
+                    <span class="student-id-tag">🎓 รหัสนักศึกษา: <span id="resStudentId">-</span></span>
+                    <h2 class="student-name" id="resStudentName">-</h2>
+                </div>
+                <div id="statusBadge" class="receive-status pending">
+                    ⏳ ยังไม่ได้รับผ้าคาด
+                </div>
+            </div>
+
+            <div class="items-title">🛍️ รายการผ้าคาดที่ได้รับ</div>
+            <div id="itemsGrid" class="items-grid"></div>
+
+            <div class="card-footer">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">กดปุ่มยืนยันเมื่อส่งมอบสินค้าเรียบร้อย</span>
+                <button id="btnConfirm" class="btn-confirm">
+                    🎀 ยืนยันรับผ้าคาดแล้ว
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5VrZmk8hcCzBVb9H6LYVv_x30cg5_QwGMG90DZv73cPyF_eyN18pBE92uP2xpekqJZb029vWlzurr/pub?output=csv";
+        let sheetData = [];
+        let currentStudent = null;
+
+        const loadStatus = document.getElementById('loadStatus');
+        const searchInput = document.getElementById('searchInput');
+        const btnSearch = document.getElementById('btnSearch');
+        const resultCard = document.getElementById('resultCard');
+        const emptyState = document.getElementById('emptyState');
+        const resStudentId = document.getElementById('resStudentId');
+        const resStudentName = document.getElementById('resStudentName');
+        const statusBadge = document.getElementById('statusBadge');
+        const itemsGrid = document.getElementById('itemsGrid');
+        const btnConfirm = document.getElementById('btnConfirm');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    sheetData = results.data;
+                    loadStatus.textContent = "พร้อมใช้งาน (โหลดข้อมูลเรียบร้อย)";
+                },
+                error: function(err) {
+                    loadStatus.textContent = "เกิดข้อผิดพลาดในการโหลด CSV";
+                    loadStatus.parentElement.style.color = "#ef4444";
+                }
+            });
+        });
+
+        btnSearch.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+
+        function handleSearch() {
+            try {
+                const query = searchInput.value.trim().toLowerCase();
+                if (!query) return;
+
+                resultCard.style.display = 'none';
+                emptyState.style.display = 'none';
+
+                const matched = sheetData.find(row => {
+                    const keys = Object.keys(row);
+                    if (keys.length < 2) return false;
+                    const idVal = String(row[keys[0]] || '').trim().toLowerCase();
+                    const nameVal = String(row[keys[1]] || '').trim().toLowerCase();
+                    return idVal.includes(query) || nameVal.includes(query);
+                });
+
+                if (matched) {
+                    currentStudent = matched;
+                    renderStudentCard(matched);
+                } else {
+                    emptyState.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                emptyState.textContent = "⚠️ เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
+                emptyState.style.display = 'block';
+            }
+        }
+
+        function renderStudentCard(data) {
+            const keys = Object.keys(data);
+            const studentId = data[keys[0]] || '-';
+            const studentName = data[keys[1]] || '-';
+
+            resStudentId.textContent = studentId;
+            resStudentName.textContent = studentName;
+
+            itemsGrid.innerHTML = '';
+            
+            // กรองเฉพาะคอลัมน์ที่เป็นสีของผ้าคาด (เช่น มีคำว่า สีขาว หรือ สีชมพู หรือ ผืน)
+            keys.forEach((key, index) => {
+                if (index < 2) return;
+                const lowerKey = key.toLowerCase();
+                const val = String(data[key] || '').trim();
+                
+                // เช็คว่าเป็นคอลัมน์จำนวนผ้าคาด (เช่น สีขาว(ผืน), สีชมพู(ผืน))
+                if ((lowerKey.includes('สี') || lowerKey.includes('ผืน')) && val && val !== '-' && val !== '0') {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'item-card';
+                    itemCard.innerHTML = `
+                        <span class="item-name">${key}</span>
+                        <span class="item-count">${val}</span>
+                    `;
+                    itemsGrid.appendChild(itemCard);
+                }
+            });
+
+            if (itemsGrid.children.length === 0) {
+                itemsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">ไม่พบรายการผ้าคาด</div>';
+            }
+
+            const isReceived = localStorage.getItem(`received_${studentId}`);
+            setCardReceivedState(!!isReceived);
+            resultCard.style.display = 'block';
+        }
+
+        function setCardReceivedState(isReceived) {
+            if (isReceived) {
+                statusBadge.className = 'receive-status done';
+                statusBadge.textContent = '✅ รับผ้าคาดเรียบร้อยแล้ว';
+                btnConfirm.disabled = true;
+                btnConfirm.textContent = '✔ บันทึกแล้ว';
+            } else {
+                statusBadge.className = 'receive-status pending';
+                statusBadge.textContent = '⏳ ยังไม่ได้รับผ้าคาด';
+                btnConfirm.disabled = false;
+                btnConfirm.textContent = '🎀 ยืนยันรับผ้าคาดแล้ว';
+            }
+        }
+
+        btnConfirm.addEventListener('click', () => {
+            if (!currentStudent) return;
+            const keys = Object.keys(currentStudent);
+            const studentId = currentStudent[keys[0]];
+            
+            localStorage.setItem(`received_${studentId}`, 'true');
+            setCardReceivedState(true);
+        });
+    </script>
+</body>
+</html>
